@@ -2514,11 +2514,12 @@ document.getElementById("modal").addEventListener("click", (e)=>{ if(e.target.id
 function typesetMath(root){
   if(!root) return;
   try{
+    if(window.CoreUpTypesetMathV36){ window.CoreUpTypesetMathV36(root); return; }
     if(window.renderMathInElement){
       window.renderMathInElement(root, {
         delimiters: [
-          {left: "\\(", right: "\\)", display: false},
-          {left: "\\[", right: "\\]", display: true}
+          {left: "\(", right: "\)", display: false},
+          {left: "\[", right: "\]", display: true}
         ],
         throwOnError: false
       });
@@ -6762,6 +6763,25 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   .cu32-typing{display:inline-flex;gap:4px;border:1px solid #e2e8f0;border-radius:16px;padding:10px 12px;background:#fff;margin:8px 0;width:max-content}.cu32-typing span{width:6px;height:6px;border-radius:50%;background:#94a3b8;animation:cu32blink 1s infinite ease-in-out}.cu32-typing span:nth-child(2){animation-delay:.15s}.cu32-typing span:nth-child(3){animation-delay:.3s}@keyframes cu32blink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
   .cu32-actions{padding:10px 12px;border-top:1px solid #e2e8f0;background:#fff;display:grid;grid-template-columns:1fr 1fr;gap:8px;}.cu32-actions button{border:1px solid #cfe0ee;background:#fff;border-radius:12px;padding:9px 10px;font-family:inherit;font-size:12.5px;font-weight:900;cursor:pointer;color:#0f172a}.cu32-actions button:hover{background:#f0f9ff;border-color:#7dd3fc}.cu32-actions button[disabled]{opacity:.43!important;cursor:not-allowed!important;background:#f8fafc!important;}
   @media(max-width:760px){.topbar .row{padding-right:62px!important;padding-left:62px!important}.coreup-v32-header-logo{right:8px!important;width:34px!important;height:34px!important}.coreup-v32-header-logo img{width:25px!important;height:25px!important}.logoWrap{left:8px!important}.logoWrap img{max-height:34px!important}#cu32Drawer{left:8px;bottom:70px;width:calc(100vw - 16px)}#cu32Launcher{left:10px;bottom:10px}}
+
+/* CoreUp V36: independent formula renderer - no online asset dependency */
+.cu32-card-body .cu-formula,
+.ai-help-body .cu-formula{direction:ltr;unicode-bidi:isolate;display:inline-flex;align-items:center;gap:4px;font-family:"Times New Roman","Cambria Math",serif;font-weight:700;white-space:nowrap;vertical-align:middle;line-height:1.35;color:#0f172a;}
+.cu32-card-body .cu-formula-block,
+.ai-help-body .cu-formula-block{display:flex;justify-content:center;align-items:center;width:100%;margin:10px 0;overflow-x:auto;padding:4px 2px;}
+.cu32-card-body .cu-frac,
+.ai-help-body .cu-frac{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;margin:0 3px;line-height:1.05;min-width:1.15em;}
+.cu32-card-body .cu-frac .cu-num,
+.ai-help-body .cu-frac .cu-num{display:block;border-bottom:1.8px solid currentColor;padding:0 4px 2px 4px;text-align:center;min-width:100%;}
+.cu32-card-body .cu-frac .cu-den,
+.ai-help-body .cu-frac .cu-den{display:block;padding:2px 4px 0 4px;text-align:center;min-width:100%;}
+.cu32-card-body .cu-formula sub,
+.ai-help-body .cu-formula sub{font-size:.72em;line-height:0;vertical-align:-.35em;margin-inline-start:1px;}
+.cu32-card-body .cu-formula sup,
+.ai-help-body .cu-formula sup{font-size:.72em;line-height:0;vertical-align:.55em;margin-inline-start:1px;}
+.cu32-card-body .cu-formula .cu-op,
+.ai-help-body .cu-formula .cu-op{padding:0 2px;}
+
 </style>
 
 
@@ -6777,6 +6797,7 @@ if(window.__examRunning) startTimer(); else showIntroModal();
     s=String(s==null?'':s);
     for(var i=0;i<3;i++) s=s.replace(/\\\\/g,'\\');
     s=s.replace(/\br\b/g,'\\phi_i');
+    s=s.replace(/\bphi_i\b/g,'\\phi_i');
     s=s.replace(/\bN\b/g,'n');
     s=s.replace(/\\frac\{f\}\{n\}/g,'\\dfrac{f_i}{n}');
     s=s.replace(/\\frac/g,'\\dfrac');
@@ -6792,25 +6813,124 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   function questionId(p){return (p&&p.q&&p.q.id)||'';}
   function lessonId(p){return (p&&p.lesson)||((location.pathname.indexOf('2_2')>=0||document.title.indexOf('2.2')>=0)?'2.2':'2.1');}
   function canSolve(p){return !!(p && (p.includeSolution || Number(p.attempt||0)>=2));}
-  function hasMath(s){s=norm(s);return /\\\(|\\\[|\\dfrac|\\frac|[_^]|=/.test(s);}
-  function katexHtml(expr, display){
-    expr=norm(expr).replace(/\\\\/g,'\\').replace(/^\\\(|\\\)$/g,'').replace(/^\\\[|\\\]$/g,'');
-    try{ if(window.katex) return window.katex.renderToString(expr,{throwOnError:false,displayMode:!!display,strict:'ignore'}); }catch(e){}
-    return '<span class="cu32-tex-fallback">'+esc(expr)+'</span>';
+  function hasMath(s){
+    s=norm(s);
+    return /\\\(|\\\[|\\dfrac|\\frac|\\phi|\\theta|\\times|\\cdots|\\sum|\\leq|\\geq|[_^=]|\bphi_i\b|\bf_i\b|\bF_i\b|\bx_i\b|\bb_i\b|\bb_\{/.test(s);
   }
-  function renderMathText(raw){
-    var s=norm(raw).replace(/\\\\/g,'\\'), out='', last=0;
-    var re=/\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/g, m;
-    while((m=re.exec(s))){
-      out+=esc(s.slice(last,m.index));
-      var display=m[1]!=null, expr=display?m[1]:m[2];
-      out+=katexHtml(expr,display);
-      last=re.lastIndex;
+  function htmlEscape(s){return String(s==null?'':s).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
+  function readGroup(str, pos){
+    if(str[pos] !== '{') return {text:'', end:pos};
+    var depth=0, out='', i=pos;
+    for(; i<str.length; i++){
+      var ch=str[i];
+      if(ch==='{' ){ if(depth>0) out+=ch; depth++; continue; }
+      if(ch==='}' ){ depth--; if(depth===0){i++; break;} out+=ch; continue; }
+      out+=ch;
     }
-    out+=esc(s.slice(last));
-    if(!out.trim() && s.trim()) out=esc(s);
+    return {text:out, end:i};
+  }
+  function renderFormula(expr){
+    expr=norm(expr).replace(/\\\(/g,'').replace(/\\\)/g,'').replace(/\\\[/g,'').replace(/\\\]/g,'');
+    expr=expr.replace(/\bphi_i\b/g,'\\phi_i').replace(/\btheta\b/g,'\\theta');
+    var i=0, out='';
+    function cmd(name){
+      var map={phi:'φ',theta:'θ',times:'×',cdots:'…',ldots:'…',leq:'≤',geq:'≥',approx:'≈',neq:'≠',sum:'Σ','%':'%',div:'÷'};
+      return map[name] || name;
+    }
+    while(i<expr.length){
+      var ch=expr[i];
+      if(ch==='\\'){
+        var j=i+1;
+        if(expr[j]==='%'){out+='%'; i=j+1; continue;}
+        while(j<expr.length && /[A-Za-z]+/.test(expr[j])) j++;
+        var name=expr.slice(i+1,j);
+        if((name==='dfrac'||name==='frac') && expr[j]==='{'){
+          var g1=readGroup(expr,j); var g2=readGroup(expr,g1.end);
+          out+='<span class="cu-frac"><span class="cu-num">'+renderFormula(g1.text)+'</span><span class="cu-den">'+renderFormula(g2.text)+'</span></span>';
+          i=g2.end; continue;
+        }
+        if(name==='left'||name==='right'){ i=j; continue; }
+        out+=htmlEscape(cmd(name)); i=j; continue;
+      }
+      if(ch==='_'){
+        var sub, end;
+        if(expr[i+1]==='{'){var g=readGroup(expr,i+1); sub=g.text; end=g.end;} else {sub=expr[i+1]||''; end=i+2;}
+        out+='<sub>'+renderFormula(sub)+'</sub>'; i=end; continue;
+      }
+      if(ch==='^'){
+        var sup, end2;
+        if(expr[i+1]==='{'){var gg=readGroup(expr,i+1); sup=gg.text; end2=gg.end;} else {sup=expr[i+1]||''; end2=i+2;}
+        out+='<sup>'+renderFormula(sup)+'</sup>'; i=end2; continue;
+      }
+      if(ch==='{' || ch==='}'){i++; continue;}
+      if(ch==='*'){out+='×'; i++; continue;}
+      out+=htmlEscape(ch); i++;
+    }
     return out;
   }
+  function formulaWrap(expr, display){
+    var inner=renderFormula(expr);
+    if(display) return '<span class="cu-formula-block"><span class="cu-formula">'+inner+'</span></span>';
+    return '<span class="cu-formula">'+inner+'</span>';
+  }
+  function renderTexInText(txt){
+    txt=norm(txt);
+    var result='', i=0;
+    while(i<txt.length){
+      var start=txt.indexOf('\\dfrac', i);
+      var start2=txt.indexOf('\\frac', i);
+      if(start<0 || (start2>=0 && start2<start)) start=start2;
+      if(start<0){ result+=htmlEscape(txt.slice(i)); break; }
+      result+=htmlEscape(txt.slice(i,start));
+      var j=start+1; while(j<txt.length && /[A-Za-z]+/.test(txt[j])) j++;
+      var g1=readGroup(txt,j), g2=readGroup(txt,g1.end);
+      if(g1.end===j || g2.end===g1.end){ result+=htmlEscape(txt.slice(start,j)); i=j; continue; }
+      result+=formulaWrap(txt.slice(start,g2.end), false);
+      i=g2.end;
+    }
+    result=result
+      .replace(/\\phi_i/g,'<span class="cu-formula">φ<sub>i</sub></span>')
+      .replace(/\bphi_i\b/g,'<span class="cu-formula">φ<sub>i</sub></span>')
+      .replace(/\\theta/g,'<span class="cu-formula">θ</span>')
+      .replace(/\\times/g,'<span class="cu-formula">×</span>')
+      .replace(/\\%/g,'%')
+      .replace(/\\cdots/g,'…')
+      .replace(/\bf_i\b/g,'<span class="cu-formula">f<sub>i</sub></span>')
+      .replace(/\bF_i\b/g,'<span class="cu-formula">F<sub>i</sub></span>')
+      .replace(/\bx_i\b/g,'<span class="cu-formula">x<sub>i</sub></span>')
+      .replace(/\bb_i\b/g,'<span class="cu-formula">b<sub>i</sub></span>')
+      .replace(/b_\{i-1\}/g,'<span class="cu-formula">b<sub>i−1</sub></span>');
+    return result;
+  }
+  function renderMathText(raw){
+    var s=norm(raw), out='', last=0;
+    var re=/\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/g, m;
+    while((m=re.exec(s))){
+      out+=renderTexInText(s.slice(last,m.index));
+      var display=m[1]!=null, expr=display?m[1]:m[2];
+      out+=formulaWrap(expr, display || /^\s*(?:\\d?frac|[A-Za-z0-9_{}\\+\-=\s.%]+)\s*$/.test(expr));
+      last=re.lastIndex;
+    }
+    out+=renderTexInText(s.slice(last));
+    return out || htmlEscape(s);
+  }
+  window.CoreUpRenderMathTextV36 = renderMathText;
+  window.CoreUpTypesetMathV36 = function(root){
+    if(!root) return;
+    try{
+      var walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,null);
+      var nodes=[], node;
+      while((node=walker.nextNode())){
+        var val=node.nodeValue||'';
+        if(/\\\(|\\\[|\\dfrac|\\frac|\\phi|\bphi_i\b/.test(val)) nodes.push(node);
+      }
+      nodes.forEach(function(n){
+        var span=document.createElement('span');
+        span.innerHTML=renderMathText(n.nodeValue||'');
+        n.parentNode.replaceChild(span,n);
+      });
+    }catch(e){}
+  };
   function ensureLogos(){
     try{
       document.querySelectorAll('img').forEach(function(img){var src=img.getAttribute('src')||''; if(/ksu_logo\.png/.test(src)) img.src=KSU_LOGO; if(/core_up_(icon|logo|mark|full)\.png/.test(src)) img.src=CORE_LOGO;});
