@@ -6781,6 +6781,8 @@ if(window.__examRunning) startTimer(); else showIntroModal();
 .ai-help-body .cu-formula sup{font-size:.72em;line-height:0;vertical-align:.55em;margin-inline-start:1px;}
 .cu32-card-body .cu-formula .cu-op,
 .ai-help-body .cu-formula .cu-op{padding:0 2px;}
+.cu32-card-body .cu-math-text,
+.ai-help-body .cu-math-text{font-family:inherit;font-weight:850;direction:rtl;unicode-bidi:isolate;padding:0 1px;}
 
 </style>
 
@@ -6834,7 +6836,7 @@ if(window.__examRunning) startTimer(); else showIntroModal();
     expr=expr.replace(/\bphi_i\b/g,'\\phi_i').replace(/\btheta\b/g,'\\theta');
     var i=0, out='';
     function cmd(name){
-      var map={phi:'φ',theta:'θ',times:'×',cdots:'…',ldots:'…',leq:'≤',geq:'≥',approx:'≈',neq:'≠',sum:'Σ','%':'%',div:'÷'};
+      var map={phi:'φ',theta:'θ',times:'×',cdots:'…',ldots:'…',leq:'≤',geq:'≥',approx:'≈',neq:'≠',sum:'Σ','%':'%',div:'÷',circ:'°',degree:'°',lfloor:'⌊',rfloor:'⌋',lceil:'⌈',rceil:'⌉',ln:'ln',max:'max',min:'min'};
       return map[name] || name;
     }
     while(i<expr.length){
@@ -6848,6 +6850,11 @@ if(window.__examRunning) startTimer(); else showIntroModal();
           var g1=readGroup(expr,j); var g2=readGroup(expr,g1.end);
           out+='<span class="cu-frac"><span class="cu-num">'+renderFormula(g1.text)+'</span><span class="cu-den">'+renderFormula(g2.text)+'</span></span>';
           i=g2.end; continue;
+        }
+        if((name==='text'||name==='mathrm'||name==='operatorname') && expr[j]==='{'){
+          var tg=readGroup(expr,j);
+          out+='<span class="cu-math-text">'+htmlEscape(tg.text)+'</span>';
+          i=tg.end; continue;
         }
         if(name==='left'||name==='right'){ i=j; continue; }
         out+=htmlEscape(cmd(name)); i=j; continue;
@@ -6867,6 +6874,10 @@ if(window.__examRunning) startTimer(); else showIntroModal();
       out+=htmlEscape(ch); i++;
     }
     return out;
+  }
+  function isComplexFormula(expr){
+    expr=String(expr||'');
+    return /\\d?frac|=|\\times|\\cdots|\\sum|\\lfloor|\\lceil|\\sqrt|[+−\-]/.test(expr);
   }
   function formulaWrap(expr, display){
     var inner=renderFormula(expr);
@@ -6908,7 +6919,8 @@ if(window.__examRunning) startTimer(); else showIntroModal();
     while((m=re.exec(s))){
       out+=renderTexInText(s.slice(last,m.index));
       var display=m[1]!=null, expr=display?m[1]:m[2];
-      out+=formulaWrap(expr, display || /^\s*(?:\\d?frac|[A-Za-z0-9_{}\\+\-=\s.%]+)\s*$/.test(expr));
+      var onlyFormula = (norm(s.slice(m.index, re.lastIndex)) === norm(s));
+      out+=formulaWrap(expr, display || (onlyFormula && isComplexFormula(expr)));
       last=re.lastIndex;
     }
     out+=renderTexInText(s.slice(last));
@@ -6946,6 +6958,15 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   }
   function keyOf(p){
     var b=(p&&p.b)||{}, qid=questionId(p), bi=branchIndex(p), text=[branchTitle(p), b.prompt||'', A(b.parts).map(function(x){return (x.label||'')+' '+(x.key||'');}).join(' '), A(p&&p.wrongItems).map(function(x){return (x.key||'')+' '+(x.label||'');}).join(' ')].join(' ').toLowerCase();
+    if(lessonId(p)==='2.1'){
+      if(qid==='q1') return bi===0?'relPctCum':(bi===1?'most':'pct');
+      if(qid==='q2') return bi===0?'rel':(bi===1?'pct':'pie');
+      if(qid==='q3') return bi===0?'most':(bi===1?'pie':'relPctCum');
+      if(qid==='q4'||qid==='q5') return 'stem';
+      if(qid==='q6') return bi===0?'pct':(bi===1?'rel':'pie');
+      if(qid==='q7') return bi===0?'pie':(bi===1?'pie':'pct');
+      if(qid==='q8') return 'datatype';
+    }
     if(lessonId(p)==='2.2'){
       if(qid==='q1'||/سعة|عدد الفئات|range|مدى/.test(text)) return 'classBuild';
       if(qid==='q2'||/حدود|مركز/.test(text)) return 'classBounds';
@@ -7016,7 +7037,7 @@ if(window.__examRunning) startTimer(); else showIntroModal();
     if(k==='mostClass'||k==='most') return [String.raw`الفئة الأعلى تكرارًا هي الفئة التي تمتلك أكبر \\(f_i\\).`,String.raw`الفئة الأقل تكرارًا هي الفئة التي تمتلك أصغر \\(f_i\\).`,String.raw`لا يوجد تعادل في \\(f_i\\) عند هذا النوع من الأسئلة.`];
     if(k==='mid') return [String.raw`\\(x_i=\\dfrac{b_{i-1}+b_i}{2}\\).`,String.raw`\\(x_i\\) مركز الفئة، و \\(b_{i-1}\\) الحد الفعلي الأدنى، و \\(b_i\\) الحد الفعلي الأعلى.`];
     if(k==='pie') return [String.raw`\\(\\theta_i=\\dfrac{f_i}{n}\\times360^\\circ\\).`,String.raw`\\(\\theta_i\\) زاوية القطاع، و \\(f_i\\) تكرار الفئة، و \\(n\\) مجموع التكرارات.`];
-    if(k==='stem') return [String.raw`القيمة = \\(10\\times\\text{الساق}+\\text{الورقة}\\).`,String.raw`عدد القيم = عدد الأوراق.`,String.raw`الساق الأكثر تكرارًا هي الساق ذات أكبر عدد من الأوراق دون تعادل.`];
+    if(k==='stem') return [String.raw`القيمة = \\(10\\times الساق + الورقة\\).`,String.raw`عدد القيم = عدد الأوراق.`,String.raw`الساق الأكثر تكرارًا هي الساق ذات أكبر عدد من الأوراق دون تعادل.`];
     if(k==='datatype') return ['البيانات النوعية: قيمها أسماء أو فئات.','البيانات النوعية الترتيبية: فئات لها ترتيب واضح.','المدرج التكراري يستخدم بيانات كمية مجمعة في فئات عددية متصلة.'];
     if(k==='pct') return [String.raw`\\(\\phi_i=\\dfrac{f_i}{n}\\).`,String.raw`التكرار المئوي \\(=\\phi_i\\times100\\%\\).`,String.raw`\\(f_i\\) تكرار الفئة، و \\(n\\) مجموع التكرارات.`];
     if(k==='rel') return [String.raw`\\(\\phi_i=\\dfrac{f_i}{n}\\).`,String.raw`\\(\\phi_i\\) التكرار النسبي، و \\(f_i\\) تكرار الفئة، و \\(n\\) مجموع التكرارات.`];
