@@ -6758,6 +6758,10 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   .cu32-card{background:#fff;border:1px solid #dbeafe;border-radius:17px;box-shadow:0 8px 22px rgba(15,23,42,.06);padding:12px 13px;opacity:0;transform:translateY(8px);transition:.24s ease;}
   .cu32-card.on{opacity:1;transform:translateY(0)}.cu32-card-title{color:#0369a1;font-weight:1000;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px}.cu32-card-title:before{content:"";width:7px;height:7px;border-radius:50%;background:#0284c7;display:inline-block;}
   .cu32-card-body{font-size:13.5px;line-height:2.05;color:#0f172a;font-weight:850}.cu32-card-body p{margin:6px 0}.cu32-card-body .cu32-line{margin:8px 0}.cu32-card-body .cu32-math-line{direction:ltr;unicode-bidi:isolate;text-align:center;overflow-x:auto;margin:10px 0;padding:4px 0}.cu32-card-body .katex{font-size:1.08em}.cu32-card-body .katex-display{margin:.35em 0!important;overflow-x:auto;overflow-y:hidden}.cu32-card-body .katex-html{direction:ltr;unicode-bidi:isolate}
+  .cu32-card-body mjx-container,.ai-help-body mjx-container{direction:ltr!important;unicode-bidi:isolate!important;font-size:112%!important;}
+  .cu32-card-body mjx-container[display="true"],.ai-help-body mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;margin:.45em auto!important;text-align:center!important;}
+  .cu32-mjx-inline{direction:ltr;unicode-bidi:isolate;display:inline-block;margin:0 .08em;}
+  .cu32-mjx-display{direction:ltr;unicode-bidi:isolate;text-align:center;margin:10px 0;overflow-x:auto;}
   .cu32-typing{display:inline-flex;gap:4px;border:1px solid #e2e8f0;border-radius:16px;padding:10px 12px;background:#fff;margin:8px 0;width:max-content}.cu32-typing span{width:6px;height:6px;border-radius:50%;background:#94a3b8;animation:cu32blink 1s infinite ease-in-out}.cu32-typing span:nth-child(2){animation-delay:.15s}.cu32-typing span:nth-child(3){animation-delay:.3s}@keyframes cu32blink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
   .cu32-actions{padding:10px 12px;border-top:1px solid #e2e8f0;background:#fff;display:grid;grid-template-columns:1fr 1fr;gap:8px;}.cu32-actions button{border:1px solid #cfe0ee;background:#fff;border-radius:12px;padding:9px 10px;font-family:inherit;font-size:12.5px;font-weight:900;cursor:pointer;color:#0f172a}.cu32-actions button:hover{background:#f0f9ff;border-color:#7dd3fc}.cu32-actions button[disabled]{opacity:.43!important;cursor:not-allowed!important;background:#f8fafc!important;}
   @media(max-width:760px){.topbar .row{padding-right:62px!important;padding-left:62px!important}.coreup-v32-header-logo{right:8px!important;width:34px!important;height:34px!important}.coreup-v32-header-logo img{width:25px!important;height:25px!important}.logoWrap{left:8px!important}.logoWrap img{max-height:34px!important}#cu32Drawer{left:8px;bottom:70px;width:calc(100vw - 16px)}#cu32Launcher{left:10px;bottom:10px}}
@@ -6791,24 +6795,38 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   function questionId(p){return (p&&p.q&&p.q.id)||'';}
   function lessonId(p){return (p&&p.lesson)||((location.pathname.indexOf('2_2')>=0||document.title.indexOf('2.2')>=0)?'2.2':'2.1');}
   function canSolve(p){return !!(p && (p.includeSolution || Number(p.attempt||0)>=2));}
-  function hasMath(s){s=norm(s);return /\\\(|\\\[|\\dfrac|\\frac|[_^]|=/.test(s);}
-  function katexHtml(expr, display){
-    expr=norm(expr).replace(/^\\\(|\\\)$/g,'').replace(/^\\\[|\\\]$/g,'');
-    try{ if(window.katex) return window.katex.renderToString(expr,{throwOnError:false,displayMode:!!display,strict:'ignore'}); }catch(e){}
-    return '<span class="cu32-tex-fallback">'+esc(expr)+'</span>';
-  }
+  function hasMath(s){s=norm(s);return /\\\(|\\\[|\\dfrac|\\frac|[_^]/.test(s);}
+  function texInline(expr){return '<span class="cu32-mjx-inline">\\('+esc(expr)+'\\)</span>';}
+  function texDisplay(expr){return '<div class="cu32-math-line cu32-mjx-display">\\['+esc(expr)+'\\]</div>';}
   function renderMathText(raw){
-    var s=norm(raw), out='', last=0;
+    var s=norm(raw);
+    var out='', last=0;
     var re=/\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/g, m;
     while((m=re.exec(s))){
-      out+=esc(s.slice(last,m.index));
-      var display=m[1]!=null, expr=display?m[1]:m[2];
-      out+=katexHtml(expr,display);
-      last=re.lastIndex;
+      out += esc(s.slice(last,m.index));
+      var display = m[1] != null;
+      var expr = display ? m[1] : m[2];
+      out += display ? texDisplay(expr) : texInline(expr);
+      last = re.lastIndex;
     }
-    out+=esc(s.slice(last));
-    if(!out.trim() && s.trim()) out=esc(s);
-    return out;
+    out += esc(s.slice(last));
+    return out || esc(s);
+  }
+  function typesetNode(node){
+    try{
+      if(!node) return Promise.resolve();
+      if(window.MathJax && MathJax.startup && MathJax.startup.promise){
+        return MathJax.startup.promise.then(function(){
+          if(MathJax.typesetClear) MathJax.typesetClear([node]);
+          if(MathJax.typesetPromise) return MathJax.typesetPromise([node]);
+        }).catch(function(){return null;});
+      }
+      if(window.MathJax && MathJax.typesetPromise){
+        if(MathJax.typesetClear) MathJax.typesetClear([node]);
+        return MathJax.typesetPromise([node]).catch(function(){return null;});
+      }
+    }catch(e){}
+    return Promise.resolve();
   }
   function ensureLogos(){
     try{
@@ -6970,7 +6988,9 @@ if(window.__examRunning) startTimer(); else showIntroModal();
           var raw=arr[idx++]; var p=document.createElement('p'); p.className='cu32-line'; c.appendChild(p);
           if(hasMath(raw)){
             p.classList.add('cu32-math-aware'); p.innerHTML=renderMathText(raw); p.style.opacity='0'; p.style.transform='translateY(4px)';
-            setTimeout(function(){p.style.transition='.18s ease';p.style.opacity='1';p.style.transform='translateY(0)';b.scrollTop=b.scrollHeight;setTimeout(nextLine,170);},80);
+            typesetNode(p).then(function(){
+              p.style.transition='.18s ease';p.style.opacity='1';p.style.transform='translateY(0)';b.scrollTop=b.scrollHeight;setTimeout(nextLine,170);
+            });
           }else{
             var i=0; (function tick(){i+=1; p.textContent=raw.slice(0,i); b.scrollTop=b.scrollHeight; if(i<raw.length) setTimeout(tick,13); else setTimeout(nextLine,110);})();
           }
@@ -6984,7 +7004,7 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   function handleWrongAnswer(p){ctx=p||{};chain=Promise.resolve();openDrawer(true);var blocks=[{title:'التشخيص',lines:diagnosisLines(ctx)},{title:'اشرح أكثر',lines:explainLines(ctx)},{title:'اعرض القاعدة',lines:ruleLines(ctx)}]; if(canSolve(ctx)) blocks.push({title:'اعرض الحل',lines:solutionLines(ctx)}); queue(blocks);return true;}
   function installLauncher(){var l=document.getElementById('cu32Launcher');if(!l){l=document.createElement('div');l.id='cu32Launcher';document.body.appendChild(l);}l.innerHTML='<button type="button"><img alt="Core Up" src="'+CORE_LOGO+'">المساعد الذكي</button>';l.querySelector('button').onclick=function(){openDrawer(false);};}
   function installHelpOverride(){
-    try{ window.openHelp = function(q,b){ if(typeof window.openModal==='function') window.openModal('مساعدة', helpHtml(q,b)); else { openDrawer(true); ctx={q:q,b:b,branchIndex:(q&&q.branches)?q.branches.indexOf(b):0}; queue([{title:'اشرح أكثر',lines:explainLines(ctx)},{title:'اعرض القاعدة',lines:ruleLines(ctx)}]); } }; openHelp = window.openHelp; }catch(e){}
+    try{ window.openHelp = function(q,b){ if(typeof window.openModal==='function'){ window.openModal('مساعدة', helpHtml(q,b)); setTimeout(function(){typesetNode(document.body);},60); setTimeout(function(){typesetNode(document.body);},420); } else { openDrawer(true); ctx={q:q,b:b,branchIndex:(q&&q.branches)?q.branches.indexOf(b):0}; queue([{title:'اشرح أكثر',lines:explainLines(ctx)},{title:'اعرض القاعدة',lines:ruleLines(ctx)}]); } }; openHelp = window.openHelp; }catch(e){}
     window.CoreUpCleanAssistantV30 = window.CoreUpCleanAssistantV30 || {}; window.CoreUpCleanAssistantV30.openForBranch=function(q,b,bi){ if(window.openHelp) return window.openHelp(q,b); };
   }
   function installAPI(){var API={__coreupV32:true,loadTraining:function(){return Promise.resolve({ok:true,source:'coreup-v32'});},getTraining:function(){return {};},detectErrorType:function(p){return keyOf(p||ctx||{});},handleWrongAnswer:handleWrongAnswer,openChat:function(){openDrawer(false);return true;},openDemo:function(){return this.openChat();},ask:function(p){if(p)ctx=p;return respond((p&&p.mode)||'more').then(function(){return {ok:true};});},openHelp:function(q,b){return window.openHelp(q,b);}}; try{Object.defineProperty(window,'InternalAiTrainingAPI',{configurable:true,get:function(){return API;},set:function(v){ if(v&&v.__coreupV32) API=v; }});}catch(e){window.InternalAiTrainingAPI=API;} window.CoreUpAssistantV32=API;}
