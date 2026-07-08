@@ -13,6 +13,7 @@
   <script id="mathjax-local-coreup-script" defer src="../assets/vendor/mathjax/tex-svg.js"></script>
   <script src="../assets/vendor/katex/katex.min.js"></script>
   <script src="../assets/vendor/katex/auto-render.min.js"></script>
+  <script src="../assets/js/coreup_math_asset_fix_v35.js"></script>
   <style>
     :root{
       --bg:#f8fafc;
@@ -6758,26 +6759,9 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   .cu32-card{background:#fff;border:1px solid #dbeafe;border-radius:17px;box-shadow:0 8px 22px rgba(15,23,42,.06);padding:12px 13px;opacity:0;transform:translateY(8px);transition:.24s ease;}
   .cu32-card.on{opacity:1;transform:translateY(0)}.cu32-card-title{color:#0369a1;font-weight:1000;font-size:13px;margin-bottom:8px;display:flex;align-items:center;gap:6px}.cu32-card-title:before{content:"";width:7px;height:7px;border-radius:50%;background:#0284c7;display:inline-block;}
   .cu32-card-body{font-size:13.5px;line-height:2.05;color:#0f172a;font-weight:850}.cu32-card-body p{margin:6px 0}.cu32-card-body .cu32-line{margin:8px 0}.cu32-card-body .cu32-math-line{direction:ltr;unicode-bidi:isolate;text-align:center;overflow-x:auto;margin:10px 0;padding:4px 0}.cu32-card-body .katex{font-size:1.08em}.cu32-card-body .katex-display{margin:.35em 0!important;overflow-x:auto;overflow-y:hidden}.cu32-card-body .katex-html{direction:ltr;unicode-bidi:isolate}
-  .cu32-card-body mjx-container,.ai-help-body mjx-container{direction:ltr!important;unicode-bidi:isolate!important;font-size:112%!important;}
-  .cu32-card-body mjx-container[display="true"],.ai-help-body mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;margin:.45em auto!important;text-align:center!important;}
-  .cu32-mjx-inline{direction:ltr;unicode-bidi:isolate;display:inline-block;margin:0 .08em;}
-  .cu32-mjx-display{direction:ltr;unicode-bidi:isolate;text-align:center;margin:10px 0;overflow-x:auto;}
   .cu32-typing{display:inline-flex;gap:4px;border:1px solid #e2e8f0;border-radius:16px;padding:10px 12px;background:#fff;margin:8px 0;width:max-content}.cu32-typing span{width:6px;height:6px;border-radius:50%;background:#94a3b8;animation:cu32blink 1s infinite ease-in-out}.cu32-typing span:nth-child(2){animation-delay:.15s}.cu32-typing span:nth-child(3){animation-delay:.3s}@keyframes cu32blink{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
   .cu32-actions{padding:10px 12px;border-top:1px solid #e2e8f0;background:#fff;display:grid;grid-template-columns:1fr 1fr;gap:8px;}.cu32-actions button{border:1px solid #cfe0ee;background:#fff;border-radius:12px;padding:9px 10px;font-family:inherit;font-size:12.5px;font-weight:900;cursor:pointer;color:#0f172a}.cu32-actions button:hover{background:#f0f9ff;border-color:#7dd3fc}.cu32-actions button[disabled]{opacity:.43!important;cursor:not-allowed!important;background:#f8fafc!important;}
   @media(max-width:760px){.topbar .row{padding-right:62px!important;padding-left:62px!important}.coreup-v32-header-logo{right:8px!important;width:34px!important;height:34px!important}.coreup-v32-header-logo img{width:25px!important;height:25px!important}.logoWrap{left:8px!important}.logoWrap img{max-height:34px!important}#cu32Drawer{left:8px;bottom:70px;width:calc(100vw - 16px)}#cu32Launcher{left:10px;bottom:10px}}
-
-
-/* Core Up V34: embedded equation renderer; no external asset dependency for assistant math */
-.cu34-math{direction:ltr!important;unicode-bidi:isolate!important;display:inline-flex;align-items:center;justify-content:center;gap:.22em;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-weight:700;line-height:1.25;color:#0f172a;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:.12em .42em;margin:0 .12em;vertical-align:middle;white-space:nowrap;max-width:100%;overflow-x:auto;}
-.cu34-display{font-size:1.12em;padding:.36em .7em;margin:.16em auto;min-width:120px;background:#ffffff;border-color:#cbd5e1;box-shadow:inset 0 0 0 1px rgba(255,255,255,.72);}
-.cu34-inline{font-size:1.02em;}
-.cu34-frac{display:inline-grid;grid-template-rows:auto auto;align-items:center;text-align:center;vertical-align:middle;line-height:1.05;margin:0 .12em;}
-.cu34-num{display:block;border-bottom:1.8px solid currentColor;padding:0 .34em .12em;min-width:1.6em;}
-.cu34-den{display:block;padding:.12em .34em 0;min-width:1.6em;}
-.cu34-math sub{font-size:.72em;line-height:0;vertical-align:sub;margin-inline-start:.02em;}
-.cu34-math sup{font-size:.72em;line-height:0;vertical-align:super;margin-inline-start:.02em;}
-.cu34-text{font-family:var(--font, Cairo, sans-serif);font-weight:800;direction:rtl;unicode-bidi:isolate;}
-.cu32-card-body .cu32-math-line,.ai-help-body .cu32-math-line{display:flex;justify-content:center;align-items:center;overflow-x:auto;padding:4px 0;margin:10px 0;}
 </style>
 
 
@@ -6808,85 +6792,37 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   function questionId(p){return (p&&p.q&&p.q.id)||'';}
   function lessonId(p){return (p&&p.lesson)||((location.pathname.indexOf('2_2')>=0||document.title.indexOf('2.2')>=0)?'2.2':'2.1');}
   function canSolve(p){return !!(p && (p.includeSolution || Number(p.attempt||0)>=2));}
-  function hasMath(s){s=norm(s);return /\\\(|\\\[|\\dfrac|\\frac|[_^]/.test(s);}
-
-  function texInline(expr){return '<span class="cu34-math cu34-inline" dir="ltr">'+mathToHtml(expr)+'</span>';}
-  function texDisplay(expr){return '<div class="cu32-math-line cu32-mjx-display" dir="ltr"><span class="cu34-math cu34-display" dir="ltr">'+mathToHtml(expr)+'</span></div>';}
-  function readGroupTex(s, i){
-    while(i<s.length && /\s/.test(s.charAt(i))) i++;
-    if(s.charAt(i)!=='{') return null;
-    var depth=0, start=i+1;
-    for(var j=i;j<s.length;j++){
-      var ch=s.charAt(j);
-      if(ch==='{' && s.charAt(j-1)!=='\\') depth++;
-      else if(ch==='}' && s.charAt(j-1)!=='\\'){
-        depth--;
-        if(depth===0) return {content:s.slice(start,j), end:j+1};
-      }
-    }
-    return null;
-  }
-  function mathTextChunk(t){
-    t=String(t||'');
-    var h=esc(t);
-    h=h.replace(/\\left/g,'').replace(/\\right/g,'');
-    h=h.replace(/\\lceil/g,'⌈').replace(/\\rceil/g,'⌉').replace(/\\lfloor/g,'⌊').replace(/\\rfloor/g,'⌋');
-    h=h.replace(/\\cdots/g,'⋯').replace(/\\ldots/g,'…');
-    h=h.replace(/\\times/g,'×').replace(/\\div/g,'÷').replace(/\\pm/g,'±');
-    h=h.replace(/\\leq/g,'≤').replace(/\\geq/g,'≥').replace(/\\neq/g,'≠');
-    h=h.replace(/\\theta/g,'θ').replace(/\\phi/g,'φ').replace(/\\mu/g,'μ').replace(/\\sigma/g,'σ');
-    h=h.replace(/\\ln/g,'ln').replace(/\\sqrt/g,'√');
-    h=h.replace(/\\%/g,'%').replace(/\\circ/g,'°');
-    h=h.replace(/\\text\{([^{}]*)\}/g,function(_,a){return '<span class="cu34-text">'+a+'</span>';});
-    h=h.replace(/([A-Za-zφθμσ])_\{([^{}]+)\}/g,function(_,a,b){return a+'<sub>'+b+'</sub>';});
-    h=h.replace(/([A-Za-zφθμσ])_([A-Za-z0-9])/g,function(_,a,b){return a+'<sub>'+b+'</sub>';});
-    h=h.replace(/([A-Za-zφθμσ0-9])\^\{([^{}]+)\}/g,function(_,a,b){return a+'<sup>'+b+'</sup>';});
-    h=h.replace(/([A-Za-zφθμσ0-9])\^([A-Za-z0-9+\-]+)/g,function(_,a,b){return a+'<sup>'+b+'</sup>';});
-    h=h.replace(/\s+/g,' ').trim();
-    return h;
-  }
-  function mathToHtml(expr){
-    var s=norm(expr);
-    s=s.replace(/\\frac/g,'\\dfrac');
-    var out='', buf='', i=0;
-    function flush(){ if(buf){ out += mathTextChunk(buf); buf=''; } }
-    while(i<s.length){
-      if(s.slice(i,i+6)==='\\dfrac'){
-        var g1=readGroupTex(s,i+6);
-        if(g1){
-          var g2=readGroupTex(s,g1.end);
-          if(g2){
-            flush();
-            out += '<span class="cu34-frac"><span class="cu34-num">'+mathToHtml(g1.content)+'</span><span class="cu34-den">'+mathToHtml(g2.content)+'</span></span>';
-            i=g2.end;
-            continue;
-          }
-        }
-      }
-      buf += s.charAt(i++);
-    }
-    flush();
-    return out || mathTextChunk(s);
+  function hasMath(s){s=norm(s);return /\\\(|\\\[|\\dfrac|\\frac|[_^]|=/.test(s);}
+  function katexHtml(expr, display){
+    expr=norm(expr).replace(/\\\\/g,'\\').replace(/^\\\(|\\\)$/g,'').replace(/^\\\[|\\\]$/g,'');
+    try{ if(window.katex) return window.katex.renderToString(expr,{throwOnError:false,displayMode:!!display,strict:'ignore'}); }catch(e){}
+    return '<span class="cu32-tex-fallback">'+esc(expr)+'</span>';
   }
   function renderMathText(raw){
-    var s=norm(raw);
-    var out='', last=0;
+    var s=norm(raw).replace(/\\\\/g,'\\'), out='', last=0;
     var re=/\\\[([\s\S]*?)\\\]|\\\(([\s\S]*?)\\\)/g, m;
     while((m=re.exec(s))){
-      out += esc(s.slice(last,m.index));
-      var display = m[1] != null;
-      var expr = display ? m[1] : m[2];
-      out += display ? texDisplay(expr) : texInline(expr);
-      last = re.lastIndex;
+      out+=esc(s.slice(last,m.index));
+      var display=m[1]!=null, expr=display?m[1]:m[2];
+      out+=katexHtml(expr,display);
+      last=re.lastIndex;
     }
-    out += esc(s.slice(last));
-    if(out===esc(s) && /\\d?frac|[_^]|\\phi|\\theta|\\times|\\cdots|\\ln/.test(s)){
-      return texDisplay(s);
-    }
-    return out || esc(s);
+    out+=esc(s.slice(last));
+    if(!out.trim() && s.trim()) out=esc(s);
+    return out;
   }
-  function typesetNode(node){
-    return Promise.resolve(node||null);
+  function ensureLogos(){
+    try{
+      document.querySelectorAll('img').forEach(function(img){var src=img.getAttribute('src')||''; if(/ksu_logo\.png/.test(src)) img.src=KSU_LOGO; if(/core_up_(icon|logo|mark|full)\.png/.test(src)) img.src=CORE_LOGO;});
+      var ksu=document.querySelector('.logoWrap img'); if(ksu){ksu.src=KSU_LOGO; ksu.style.maxHeight='44px'; ksu.style.width='auto';}
+      var row=document.querySelector('.topbar .row');
+      if(row){
+        var old=row.querySelector('.coreup-v31-header-logo'); if(old) old.remove();
+        var wrap=row.querySelector('.coreup-v32-header-logo');
+        if(!wrap){wrap=document.createElement('div');wrap.className='coreup-v32-header-logo';wrap.title='Core Up';wrap.innerHTML='<img alt="Core Up">';row.appendChild(wrap);}
+        var im=wrap.querySelector('img'); if(im) im.src=CORE_LOGO;
+      }
+    }catch(e){}
   }
   function keyOf(p){
     var b=(p&&p.b)||{}, qid=questionId(p), bi=branchIndex(p), text=[branchTitle(p), b.prompt||'', A(b.parts).map(function(x){return (x.label||'')+' '+(x.key||'');}).join(' '), A(p&&p.wrongItems).map(function(x){return (x.key||'')+' '+(x.label||'');}).join(' ')].join(' ').toLowerCase();
@@ -7035,9 +6971,7 @@ if(window.__examRunning) startTimer(); else showIntroModal();
           var raw=arr[idx++]; var p=document.createElement('p'); p.className='cu32-line'; c.appendChild(p);
           if(hasMath(raw)){
             p.classList.add('cu32-math-aware'); p.innerHTML=renderMathText(raw); p.style.opacity='0'; p.style.transform='translateY(4px)';
-            typesetNode(p).then(function(){
-              p.style.transition='.18s ease';p.style.opacity='1';p.style.transform='translateY(0)';b.scrollTop=b.scrollHeight;setTimeout(nextLine,170);
-            });
+            setTimeout(function(){p.style.transition='.18s ease';p.style.opacity='1';p.style.transform='translateY(0)';b.scrollTop=b.scrollHeight;setTimeout(nextLine,170);},80);
           }else{
             var i=0; (function tick(){i+=1; p.textContent=raw.slice(0,i); b.scrollTop=b.scrollHeight; if(i<raw.length) setTimeout(tick,13); else setTimeout(nextLine,110);})();
           }
@@ -7051,7 +6985,7 @@ if(window.__examRunning) startTimer(); else showIntroModal();
   function handleWrongAnswer(p){ctx=p||{};chain=Promise.resolve();openDrawer(true);var blocks=[{title:'التشخيص',lines:diagnosisLines(ctx)},{title:'اشرح أكثر',lines:explainLines(ctx)},{title:'اعرض القاعدة',lines:ruleLines(ctx)}]; if(canSolve(ctx)) blocks.push({title:'اعرض الحل',lines:solutionLines(ctx)}); queue(blocks);return true;}
   function installLauncher(){var l=document.getElementById('cu32Launcher');if(!l){l=document.createElement('div');l.id='cu32Launcher';document.body.appendChild(l);}l.innerHTML='<button type="button"><img alt="Core Up" src="'+CORE_LOGO+'">المساعد الذكي</button>';l.querySelector('button').onclick=function(){openDrawer(false);};}
   function installHelpOverride(){
-    try{ window.openHelp = function(q,b){ if(typeof window.openModal==='function'){ window.openModal('مساعدة', helpHtml(q,b)); setTimeout(function(){typesetNode(document.body);},60); setTimeout(function(){typesetNode(document.body);},420); } else { openDrawer(true); ctx={q:q,b:b,branchIndex:(q&&q.branches)?q.branches.indexOf(b):0}; queue([{title:'اشرح أكثر',lines:explainLines(ctx)},{title:'اعرض القاعدة',lines:ruleLines(ctx)}]); } }; openHelp = window.openHelp; }catch(e){}
+    try{ window.openHelp = function(q,b){ if(typeof window.openModal==='function') window.openModal('مساعدة', helpHtml(q,b)); else { openDrawer(true); ctx={q:q,b:b,branchIndex:(q&&q.branches)?q.branches.indexOf(b):0}; queue([{title:'اشرح أكثر',lines:explainLines(ctx)},{title:'اعرض القاعدة',lines:ruleLines(ctx)}]); } }; openHelp = window.openHelp; }catch(e){}
     window.CoreUpCleanAssistantV30 = window.CoreUpCleanAssistantV30 || {}; window.CoreUpCleanAssistantV30.openForBranch=function(q,b,bi){ if(window.openHelp) return window.openHelp(q,b); };
   }
   function installAPI(){var API={__coreupV32:true,loadTraining:function(){return Promise.resolve({ok:true,source:'coreup-v32'});},getTraining:function(){return {};},detectErrorType:function(p){return keyOf(p||ctx||{});},handleWrongAnswer:handleWrongAnswer,openChat:function(){openDrawer(false);return true;},openDemo:function(){return this.openChat();},ask:function(p){if(p)ctx=p;return respond((p&&p.mode)||'more').then(function(){return {ok:true};});},openHelp:function(q,b){return window.openHelp(q,b);}}; try{Object.defineProperty(window,'InternalAiTrainingAPI',{configurable:true,get:function(){return API;},set:function(v){ if(v&&v.__coreupV32) API=v; }});}catch(e){window.InternalAiTrainingAPI=API;} window.CoreUpAssistantV32=API;}
